@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # encoding=utf-8
 
+from util.constants import dir_path
+
 
 def get_metapaths(embedding):
     u_mps = ['ede']
     for i in range(len(u_mps)):
         u_mps[i] += '_' + embedding + '.txt'
 
-    return u_mps, [], len(u_mps), 0
+    return u_mps, len(u_mps)
 
 
 def gen_id_relationship():
@@ -15,7 +17,7 @@ def gen_id_relationship():
     title_set = set()
     discipline_type_set = set()
     discipline_set = set()
-    with open('../data/导出.csv', 'r', encoding='UTF-8') as infile:
+    with open(dir_path + '导出.csv', 'r', encoding='UTF-8') as infile:
         for line in infile.readlines():
             e, pd, pdt, aboard, title, md = line.strip().replace('"', '').replace(' ', '').split(',')
             e_set.add(e)
@@ -34,7 +36,7 @@ def gen_id_relationship():
             object_dict[o] = i
             i += 1
 
-        with open('../data/' + filename + '.txt', 'w') as titlefile:
+        with open(dir_path + filename + '.txt', 'w') as titlefile:
             for o in object_dict:
                 titlefile.write(o + ',' + str(object_dict[o]) + '\n')
 
@@ -55,14 +57,14 @@ def gen_data_dic():
                 o_dic[o] = oid
         return o_dic
 
-    e_dic = gen_dic('../data/eid.txt')
-    d_dic = gen_dic('../data/did.txt')
-    dt_dic = gen_dic('../data/dtid.txt')
-    t_dic = gen_dic('../data/tid.txt')
+    e_dic = gen_dic(dir_path + 'eid.txt')
+    d_dic = gen_dic(dir_path + 'did.txt')
+    dt_dic = gen_dic(dir_path + 'dtid.txt')
+    t_dic = gen_dic(dir_path + 'tid.txt')
 
     data_dic = {}
 
-    with open('../data/导出.csv', 'r', encoding='UTF-8') as infile:
+    with open(dir_path + '导出.csv', 'r', encoding='UTF-8') as infile:
         for line in infile.readlines():
             e, d, dt, aboard, t, md = line.strip().replace('"', '').replace(' ', '').split(',')
 
@@ -121,7 +123,7 @@ def gen_meta_info(data_dic):
         et.append([key, data[3]])
 
     def save(filename, data_list):
-        with open('../data/' + filename, 'w') as outfile:
+        with open(dir_path + filename, 'w') as outfile:
             for data in data_list:
                 data = str(data).replace('[', '').replace(']', '').replace('\'', '').replace(' ', '')
                 outfile.write(str(data) + '\n')

@@ -6,6 +6,8 @@ import numpy as np
 from src.data_process import get_metapaths
 from src.metapath2vec import Metapath2vec
 from src.deepwalk import Deepwalk
+import os
+from util.constants import base_embedding_path, dir_path
 import multiprocessing
 import time
 
@@ -31,18 +33,21 @@ class HNERec:
         #
         # if self.embedding is 'mp2vec':
         #     Metapath2vec(self.train_rate).run()
-        print('Start load embedding.')
         self.X, self.user_metapathdims = self.load_embedding(self.user_metapaths, self.unum)
         self.initialize()
-        print('Load embedding finished.')
 
         self.fusion_matrix = self.get_fusion_embedding()
-        # todo 检查是否有推荐结果文件存在
-        pool = self.multi_thread_cal()
+
+        if os.path.exists(dir_path + 'result.txt'):
+            os.remove(dir_path + 'result.txt')
+            print('旧的推荐结果已经被删除！')
+
+        pool = self.multi_process_call()
         pool.close()
         pool.join()
 
     def load_embedding(self, metapaths, num):
+        print('Start load embedding.')
         X = {}
         for i in range(num):
             X[i] = {}
@@ -50,7 +55,7 @@ class HNERec:
 
         ctn = 0
         for metapath in metapaths:
-            sourcefile = '../data/test/embedding/' + metapath
+            sourcefile = base_embedding_path + metapath
             print('Loading embedding data, location: %s' % sourcefile)
             with open(sourcefile) as infile:
 
@@ -73,6 +78,7 @@ class HNERec:
                     for j in range(k):
                         X[i][ctn][j] = float(arr[j + 1])
             ctn += 1
+        print('Load embedding finished.')
         return X, metapath_dims
 
     def initialize(self):
@@ -132,12 +138,12 @@ class HNERec:
         for sim in sims:
             rec_res.append(sim[1])
 
-        with open('../data/result.txt', 'a+') as simfile:
+        with open(dir_path + 'result.txt', 'a+') as simfile:
             simfile.write(str(idx + 1) + '\t' + str(rec_res) + '\n')
 
         time.sleep(0.1)
 
-    def multi_thread_cal(self):
+    def multi_process_call(self):
         p = multiprocessing.Pool()
         p.map_async(self.cal_similarity, iterable=range(self.unum))
         return p

@@ -2,6 +2,7 @@
 # coding:utf-8
 import numpy as np
 import scipy.sparse as ss
+from util.constants import base_metapath_path, base_embedding_path, dir_path
 import os
 import subprocess
 
@@ -14,15 +15,13 @@ class Deepwalk:
         self.dnum = dnum + 1
         self.dtnum = dtnum + 1
         self.tnum = tnum
-        self.base_metapath_path= '../data/metapath/'
-        self.base_embedding_path = '../data/embedding/'
 
     def run(self):
 
         # 生成元路径，相关元路径的邻接矩阵相乘
-        self.generate_metapath('../data/test/ed.txt', self.base_metapath_path + 'ede_dpwk.txt', self.enum, self.dnum)
-        self.generate_metapath('../data/test/edt.txt', self.base_metapath_path + 'edte_dpwk.txt', self.enum, self.dtnum)
-        self.generate_metapath('../data/test/et.txt', self.base_metapath_path + 'ete_dpwk.txt', self.enum, self.tnum)
+        self.generate_metapath(dir_path + 'ed.txt', base_metapath_path + 'ede_dpwk.txt', self.enum, self.dnum)
+        self.generate_metapath(dir_path + 'edt.txt', base_metapath_path + 'edte_dpwk.txt', self.enum, self.dtnum)
+        self.generate_metapath(dir_path + 'et.txt', base_metapath_path + 'ete_dpwk.txt', self.enum, self.tnum)
 
         self.gen_embedding()
 
@@ -62,8 +61,8 @@ class Deepwalk:
 
         for metapath in metapaths:
             metapath = metapath + '_dpwk.txt'
-            input_file = self.base_metapath_path + metapath
-            output_file = '../data/embedding/' + metapath
+            input_file = base_metapath_path + metapath
+            output_file = base_embedding_path + metapath
 
             cmd = 'deepwalk --format edgelist --input ' + input_file + \
                   ' --output ' + output_file + \
