@@ -46,6 +46,47 @@ def gen_id_relationship():
     object_process(title_set, 'tid')
 
 
+def gen_meta_info(data_dic):
+    ed = []
+    edt = []
+    ea = []
+    et = []
+
+    for key in data_dic:
+        data = data_dic[key]
+        if len(data[0]) != 0:
+            for pdid in data[0]:
+                ed.append([key, pdid])
+        else:
+            print(str(key) + '---> discipline len is 0')
+            continue
+
+        if len(data[1]) != 0:
+            for pdtid in data[1]:
+                edt.append([key, pdtid])
+        else:
+            print(str(key) + '---> discipline type len is 0')
+            continue
+
+        if data[2] == '':
+            ea.append([key, 0])
+        else:
+            ea.append([key, 1])
+
+        et.append([key, data[3]])
+
+    def save(filename, data_list):
+        with open(dir_path + filename, 'w') as outfile:
+            for data in data_list:
+                data = str(data).replace('[', '').replace(']', '').replace('\'', '').replace(' ', '')
+                outfile.write(str(data) + '\n')
+
+    save('ed.txt', ed)
+    save('edt.txt', edt)
+    save('ea.txt', ea)
+    save('et.txt', et)
+
+
 def gen_data_dic():
     # 利用gen_id_relationship生成的对象-对象ID的文件
     # 根据源数据文件，生成每个申报者的相关信息
@@ -91,70 +132,6 @@ def gen_data_dic():
                 data_dic[e_dic[e]] = [pdids, [dt_dic[dt]], aboard, t_dic[t]]
 
     return data_dic
-
-
-def gen_meta_info(data_dic):
-    ed = []
-    edt = []
-    ea = []
-    et = []
-
-    for key in data_dic:
-        data = data_dic[key]
-        if len(data[0]) != 0:
-            for pdid in data[0]:
-                ed.append([key, pdid])
-        else:
-            print(str(key) + '---> discipline len is 0')
-            continue
-
-        if len(data[1]) != 0:
-            for pdtid in data[1]:
-                edt.append([key, pdtid])
-        else:
-            print(str(key) + '---> discipline type len is 0')
-            continue
-
-        if data[2] == '':
-            ea.append([key, 0])
-        else:
-            ea.append([key, 1])
-
-        et.append([key, data[3]])
-
-    def save(filename, data_list):
-        with open(dir_path + filename, 'w') as outfile:
-            for data in data_list:
-                data = str(data).replace('[', '').replace(']', '').replace('\'', '').replace(' ', '')
-                outfile.write(str(data) + '\n')
-
-    save('ed.txt', ed)
-    save('edt.txt', edt)
-    save('ea.txt', ea)
-    save('et.txt', et)
-
-
-def result_process():
-    with open('../data/new/result/linear(d).txt', 'r') as infile:
-        res_dic = {}
-        count = 0
-        for line in infile.readlines():
-            eid, res = line.strip().split('\t')
-            res_dic[eid] = res
-            count += 1
-            print(count)
-
-
-def cal_NDCG(data_dic):
-    base = data_dic['1']
-    count = 0
-    for key in data_dic:
-        data = data_dic[key]
-        if len(list(set(base[0]).intersection(set(data[0])))) != 0 or data[1] == data[1] or data[2] == data[2] or data[
-            3] == data[3]:
-            print(key + '--1')
-            count = count + 1
-    print(count)
 
 
 if __name__ == '__main__':
