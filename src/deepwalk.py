@@ -14,7 +14,7 @@ class Deepwalk:
         self.enum = enum + 1
         self.dnum = dnum + 1
         self.dtnum = dtnum + 1
-        self.tnum = tnum
+        self.tnum = tnum + 1
 
     def run(self):
 
@@ -74,4 +74,4 @@ class Deepwalk:
 
 
 if __name__ == '__main__':
-    Deepwalk(enum=21021, dnum=1357, dtnum=25, tnum=40).run()
+    Deepwalk(enum=21011, dnum=1347, dtnum=25, tnum=40).run()

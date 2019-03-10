@@ -5,7 +5,7 @@ from util.constants import dir_path
 
 
 def get_metapaths(embedding):
-    u_mps = ['ede']
+    u_mps = ['ede', 'edte', 'ete']
     for i in range(len(u_mps)):
         u_mps[i] += '_' + embedding + '.txt'
 
@@ -17,11 +17,13 @@ def gen_id_relationship():
     title_set = set()
     discipline_type_set = set()
     discipline_set = set()
-    with open(dir_path + '导出.csv', 'r', encoding='UTF-8') as infile:
+    with open(dir_path + 'out.csv', 'r', encoding='gbk') as infile:
         for line in infile.readlines():
             e, pd, pdt, aboard, title, md = line.strip().replace('"', '').replace(' ', '').split(',')
             e_set.add(e)
             title_set.add(title)
+
+            pd = pd.split(';') + md.split(';')
             for discipline in pd:
                 if discipline == '':
                     continue
@@ -105,7 +107,7 @@ def gen_data_dic():
 
     data_dic = {}
 
-    with open(dir_path + '导出.csv', 'r', encoding='UTF-8') as infile:
+    with open(dir_path + 'out.csv', 'r', encoding='gbk') as infile:
         for line in infile.readlines():
             e, d, dt, aboard, t, md = line.strip().replace('"', '').replace(' ', '').split(',')
 

@@ -1,31 +1,17 @@
 from stellargraph import StellarGraph
 import networkx as nx
 import os
+from util.constants import graph_infos, metapaths, dir_path
+import stellargraph.data.loader as loader
 
 
 class Metapath2vec:
 
-    def __init__(self, train_rate):
+    def __init__(self):
 
-        self.location = '../data/'
+        self.graph_infos = graph_infos
 
-        self.train_rate = train_rate
-
-        self.graph_infos = [['e.txt', 'node', 'e'],
-                            ['p.txt', 'node', 'p'],
-                            ['d.txt', 'node', 'd'],
-                            ['dt.txt', 'node', 'dt'],
-                            ['ep.txt', 'edge', 'belongs1', 'e', 'p'],
-                            ['pd_old.txt', 'edge', 'belongs2', 'p', 'd'],
-                            ['pdt.txt', 'edge', 'belongs3', 'p', 'dt']]
-        self.metapaths = [
-            [['p', 'e', 'p']],
-            [['p', 'dt', 'p']],
-            [['p', 'd', 'p']],
-            [['e', 'p', 'e']],
-            [['e', 'p', 'd', 'p', 'e']],
-            [['e', 'p', 'dt', 'p', 'e']]
-        ]
+        self.metapaths = metapaths
         self.g_nx = None
         self.rw = None
 
@@ -38,7 +24,7 @@ class Metapath2vec:
         将所有边和顶点信息装入图，并生成游走路径rw
         :return:
         """
-        g_nx = self.load_dataset_SMDB(self.location, self.graph_infos)
+        g_nx = self.load_dataset_SMDB(dir_path, self.graph_infos)
         print("Number of nodes {} and number  of edges {} in graph.".format(g_nx.number_of_nodes(),
                                                                             g_nx.number_of_edges()))
         from stellargraph.data import UniformRandomMetaPathWalk
@@ -56,18 +42,18 @@ class Metapath2vec:
         for metapath in metapaths:
             walks = rw.run(nodes=list(g_nx.nodes()),  # root nodes
                            length=100,  # maximum length of a random walk
-                           n=10,  # number of random walks per root node
+                           n=5,  # number of random walks per root node
                            metapaths=metapath  # the metapaths
                            )
             print("Number of random walks: {}".format(len(walks)))
 
             from gensim.models import Word2Vec
-            model = Word2Vec(walks, size=128, window=3, min_count=0, sg=1, workers=4, iter=5)
+            model = Word2Vec(walks, size=128, window=5, min_count=0, sg=1, workers=4, iter=5)
 
             filename = ''
             for tp in metapath[0]:
                 filename += str(tp)
-            filepath = self.location + 'embedding/' + filename + '_' + str(self.train_rate) + '_mp2vec.txt'
+            filepath = dir_path + 'embedding/' + filename + '_mp2vec.txt'
             print(filepath)
             self.save4embedding(filepath, model.wv, metapath[0][0])
 
@@ -82,6 +68,8 @@ class Metapath2vec:
         with open(targetfile, 'w+') as outfile:
             outfile.writelines(str(len(word_vec.vectors)) + ' 128\n')
             for entity in word_vec.index2entity:
+                if str(entity)[:1] != e_name:
+                    continue
                 string = str(word_vec.get_vector(entity))
                 string = string.replace('[', '').replace(']', '').replace('\n', '').replace('  ', ' ')
                 if string[:1] is '-':
@@ -104,7 +92,8 @@ class Metapath2vec:
                 ids = []
                 with open(os.path.join(location, info[0]), 'r') as file:
                     for line in file.readlines():
-                        ids.append(info[2] + str(line))
+                        content, nid = line.strip().split(',')
+                        ids.append(info[2] + nid)
                 g_nx.add_nodes_from(ids, label=info[2])
 
             # add the edges with labels
@@ -113,9 +102,9 @@ class Metapath2vec:
                 edges = []
                 with open(os.path.join(location, info[0]), 'r') as file:
                     for line in file.readlines():
-                        from_node, to_node, rating = line.strip().split('\t')
+                        from_node, to_node = line.strip().split(',')
                         if weighted:
-                            edges.append((info[3] + str(from_node), info[4] + str(to_node), rating))
+                            edges.append((info[3] + str(from_node), info[4] + str(to_node), 1))
                         else:
                             edges.append((info[3] + str(from_node), info[4] + str(to_node), 1))
                 g_nx.add_weighted_edges_from(edges, label=info[2])
