@@ -109,7 +109,6 @@ class HNERec:
             sourcefile = base_embedding_path + metapath
             print('Loading embedding data, location: %s' % sourcefile)
             with open(sourcefile) as infile:
-
                 k = int(infile.readline().strip().split(' ')[1])
                 print('Metapath: %s. The dim of metapath embedding: %d' % (metapath, k))
                 metapath_dims.append(k)
