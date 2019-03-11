@@ -23,7 +23,7 @@ class HNERec:
         self.res_num = 0
 
         # 生成推荐人序列
-        self.recommender = self.recommender = random.sample(range(1, self.unum), 1000)
+        self.recommender = random.sample(range(1, self.unum), 1000)  # 1 ~ unum 取 1000 个
         # 加载元路径以及各元路径的embedding信息
         self.user_metapaths, self.user_metapathnum = get_metapaths(embedding)
         self.X, self.user_metapathdims = self.load_embedding(self.user_metapaths, self.unum)
@@ -73,6 +73,13 @@ class HNERec:
                 self.statistics(nlpr, 'non-linear')
 
     def cal_rec_quota(self, quotas, res_num, method):
+        """
+        对召回率、准确率, 在不同推荐人个数下的平均, 并进行打印
+        :param quotas: 召回率, 准确率列表
+        :param res_num: 统计个数(取多少个推荐人)
+        :param method: 融合方法
+        :return:
+        """
         prec = 0
         recl = 0
         for i in quotas:
@@ -84,6 +91,13 @@ class HNERec:
               2 * prec * recl / (prec + recl), 'res_num:', res_num)
 
     def load_embedding(self, metapaths, num):
+        """
+        从 embedding 文件中加载 num 对应所有元路径类型对应向量
+        :param metapaths: 所有元路径的类型字符串, ex: ede, ete 等
+        :param num: 专家数 e 的个数
+        :return: X: X[i][j][k]: i -> unum, j -> 第几个 metapath, k -> 读取文件每一行向量表示中的第 k 列
+                 metapath_dims: 生成的元路径向量维度, 这里是 128 维
+        """
         print('Start load embedding.')
         X = {}
         for i in range(num):
@@ -113,7 +127,7 @@ class HNERec:
                     i = int(arr[0]) - 1
                     # 将每个维度值附给 X[i][ctn][j]
                     for j in range(k):
-                        X[i][ctn][j] = float(arr[j + 1])
+                        X[i][ctn][j] = float(arr[j + 1])  # 每行 idx = 0 位置是被推荐人的序号, 也就是每行有 129 个数
             ctn += 1
         print('Load embedding finished.')
         return X, metapath_dims
@@ -123,6 +137,12 @@ class HNERec:
         return 1 / (1 + np.exp(-x))
 
     def nonlinear_fusion(self, i, weight):
+        """
+        对 i 对应的用户向量, 根据不同的 weight 权重矩阵进行聚合, 生成非线性聚合后的用户向量
+        :param i: i对应用户的序号
+        :param weight: 权重
+        :return: 用户向量
+        """
         ui = np.zeros(self.userdim)
         for k in range(self.user_metapathnum):
             # 将生成的 userdim X 128（由正态分布的值填充）与某专家的embedding 128 X 1 做点乘，再加上 userdim X 1（由正态分布填充的矩阵）
@@ -134,6 +154,12 @@ class HNERec:
         return ui
 
     def linear_fusion(self, i, weight):
+        """
+        对 i 对应的用户向量, 根据不同的 weight 权重矩阵进行聚合, 生成线性聚合后的用户向量
+        :param i: i对应用户的序号
+        :param weight: 权重
+        :return: 用户向量
+        """
         ui = np.zeros(self.userdim)
         for k in range(self.user_metapathnum):
             s3 = self.Wu[k].dot(self.X[i][k]) + self.bu[k]
@@ -141,6 +167,11 @@ class HNERec:
         return ui
 
     def get_fusion_embedding(self, weight):
+        """
+        根据权重矩阵对向量进行线性与非线性聚合
+        :param weight: 权重矩阵, ex:[0.8, 0.1, 0.1]
+        :return: 经过聚合后的向量构成的矩阵
+        """
         print('embedding fusion...')
         fusion_matrix = np.zeros((2, self.unum, self.userdim))
         for i in range(self.unum):
@@ -149,6 +180,12 @@ class HNERec:
         return fusion_matrix
 
     def cal_similarity(self, idx, sim_res):
+        """
+        计算每个向量的 cos 值, 将被推荐人idx , 以及 cos 值从大到小的被推荐人 idx 列表
+        :param idx: 被推荐人 idx
+        :param sim_res: 用于存放多进程对于每个被推荐人的推荐结果的列表
+        :return:
+        """
         for femb in self.fusion_emb:
             sim = []
             rec_emb = femb[idx]
@@ -162,6 +199,10 @@ class HNERec:
             sim_res.append(sim)
 
     def multi_process_cal_smilarity(self):
+        """
+        计算推荐人列表的多进程调用
+        :return:
+        """
         mg = multiprocessing.Manager()
         ls = mg.list([])
         pool = multiprocessing.Pool(4)
@@ -172,9 +213,13 @@ class HNERec:
         return ls
 
     def gen_data_dic(self):
+        """
+        构建 eid: {pdids, dt对应列表, aboard, t对应列表} 这样一个字典
+        :return:
+        """
         data_dic = {}
         start = time.time()
-        print('generate data dictionaty...')
+        print('generate data dictionary...')
 
         # 利用gen_id_relationship生成的对象-对象ID的文件
         # 根据源数据文件，生成每个申报者的相关信息
@@ -220,6 +265,11 @@ class HNERec:
         return data_dic
 
     def cal_f1(self, res):
+        """
+        对于得到的推荐人列表, 每一个生成一行[准确率, 召回率], 最后得到一个准确率, 召回率的列表
+        :param res: 推荐人列表
+        :return:
+        """
         # 抽样人数
         # 准确率 list
         quota = []
@@ -245,6 +295,12 @@ class HNERec:
         return quota
 
     def statistics(self, res, method):
+        """
+        统计与被推荐人各属性相关的人员数, 打印相关属性数的均值
+        :param res: 推荐人列表
+        :param method: 融合方式
+        :return:
+        """
         d, dt, t = 0, 0, 0
         for rec_list in res:
             rec_id = rec_list[0]
