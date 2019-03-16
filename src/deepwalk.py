@@ -19,9 +19,9 @@ class Deepwalk:
     def run(self):
 
         # 生成元路径，相关元路径的邻接矩阵相乘
-        self.generate_metapath(dir_path + 'ed.txt', base_metapath_path + 'ede_dpwk.txt', self.enum, self.dnum)
-        self.generate_metapath(dir_path + 'edt.txt', base_metapath_path + 'edte_dpwk.txt', self.enum, self.dtnum)
-        self.generate_metapath(dir_path + 'et.txt', base_metapath_path + 'ete_dpwk.txt', self.enum, self.tnum)
+        self.generate_metapath(dir_path + 'ed.txt', dir_path + 'ede_dpwk.txt', self.enum, self.dnum)
+        self.generate_metapath(dir_path + 'edt.txt', dir_path + 'edte_dpwk.txt', self.enum, self.dtnum)
+        self.generate_metapath(dir_path + 'et.txt', dir_path + 'ete_dpwk.txt', self.enum, self.tnum)
 
         self.gen_embedding()
 

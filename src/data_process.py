@@ -5,7 +5,8 @@ from util.constants import dir_path
 
 
 def get_metapaths(embedding):
-    u_mps = ['ede', 'edte', 'ete']
+    # u_mps = ['ede']
+    u_mps = ['ede']
     for i in range(len(u_mps)):
         u_mps[i] += '_' + embedding + '.txt'
 
